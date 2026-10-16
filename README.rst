@@ -1,5 +1,44 @@
 .. SPDX-License-Identifier: AGPL-3.0-or-later
 
+Windows-native fork
+===================
+
+This fork runs SearXNG **natively on Windows** — no Docker, no WSL. Upstream
+targets Linux/Unix and points Windows users at a container or WSL. The only
+source change required was making the Unix-only ``pwd`` import in
+``searx/valkeydb.py`` optional.
+
+Install
+-------
+
+.. code-block:: powershell
+
+   uv venv .venv --python 3.12
+   uv pip install --python .venv\Scripts\python.exe setuptools wheel pyyaml msgspec typing-extensions pybind11
+   uv pip install --python .venv\Scripts\python.exe --no-build-isolation -e .
+   uv pip install --python .venv\Scripts\python.exe tzdata
+
+   copy settings.windows.yml settings.yml
+   .venv\Scripts\python.exe -c "import secrets;print(secrets.token_hex(32))"
+   rem paste the output into server.secret_key in settings.yml
+
+Run
+---
+
+.. code-block:: powershell
+
+   run.cmd
+
+The instance serves on http://127.0.0.1:8888 with JSON search enabled, ready
+for local agents::
+
+   crw search "your query" --search-backend-url http://127.0.0.1:8888
+
+See ``WINDOWS.md`` for the complete list of changes against upstream.
+Everything below is the unmodified upstream README.
+
+----
+
 .. _metasearch engine: https://en.wikipedia.org/wiki/Metasearch_engine
 .. _Installation guide: https://docs.searxng.org/admin/installation.html
 .. _Configuration guide: https://docs.searxng.org/admin/settings/index.html
