@@ -56,3 +56,20 @@ your-tool --search-backend-url http://127.0.0.1:8888
 Everything else is untouched. `limiter`/bot-detection is off in the template
 because it requires a Valkey/Redis server; enable it and run Valkey if you
 expose the instance beyond localhost.
+
+## Keeping up with upstream
+
+`.github/workflows/sync-upstream.yml` merges `searxng/searxng`'s `master` into
+this fork's `master` every Monday, and on demand from the Actions tab.
+
+- A clean merge is pushed straight to `master`.
+- A conflict is never auto-resolved: the run creates a `sync/upstream-*` branch
+  and opens a pull request, so nothing lands on `master` unreviewed.
+
+Conflicts can only come from this fork's own divergences — the 4 deleted
+`:socket` files, `searx/valkeydb.py`, the top of `README.rst`, or the tail of
+`.gitignore`.
+
+Two caveats: GitHub Actions are off by default on forks (enable them in the
+Actions tab), and GitHub disables scheduled workflows after 60 days without
+repository activity — push anything, or re-enable it from the Actions tab.

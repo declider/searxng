@@ -1,0 +1,101 @@
+---
+# Weekly automatic sync of this fork's master with upstream SearXNG.
+#
+# A clean merge is pushed straight to master. A conflict is never auto-resolved:
+# it becomes a sync/upstream-* branch plus a pull request, so nothing lands on
+# master unreviewed.
+name: Sync upstream
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    # Mondays at 04:00 UTC
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync master
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/searxng/searxng.git
+          git fetch --no-tags upstream master
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "uptodate=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "uptodate=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge upstream
+        id: merge
+        if: steps.check.outputs.uptodate == 'false'
+        run: |
+          if git merge --no-edit upstream/master; then
+            echo "result=clean" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo "result=conflict" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push merged master
+        if: steps.merge.outputs.result == 'clean'
+        run: git push origin HEAD:master
+
+      - name: Open a pull request for the conflict
+        if: steps.merge.outputs.result == 'conflict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY: |
+            Upstream `master` no longer merges cleanly with this fork.
+
+            Nothing was pushed to `master`. This branch holds the attempted merge
+            with conflict markers in the affected files. Resolve them here and the
+            pull request updates.
+
+            The fork's divergences, most likely to be involved:
+
+            - the 4 deleted `utils/templates/etc/**/*:socket` files — keep them
+              deleted, their names are not valid on NTFS
+            - `searx/valkeydb.py` — keep the optional `pwd` import
+            - the top of `README.rst` and the tail of `.gitignore`
+        run: |
+          existing=$(gh pr list --state open --json headRefName \
+            --jq '[.[] | select(.headRefName | startswith("sync/upstream"))] | length')
+          if [ "$existing" != "0" ]; then
+            echo "An upstream-sync pull request is already open; not creating another."
+            exit 0
+          fi
+
+          branch="sync/upstream-${GITHUB_RUN_ID}"
+          git checkout -b "$branch"
+          git merge --no-edit upstream/master || true
+          git add -A
+          git commit -m "chore: sync upstream master (conflicts need resolution)"
+          git push -u origin "$branch"
+
+          gh pr create --base master --head "$branch" \
+            --title "chore: sync upstream master (conflicts need resolution)" \
+            --body "$PR_BODY"
