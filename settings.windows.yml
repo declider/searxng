@@ -1,0 +1,21 @@
+# SearXNG — Windows-native settings template (see run.cmd)
+# Copy to settings.yml and set a unique server.secret_key.
+use_default_settings: true
+
+general:
+  debug: false
+
+search:
+  # JSON is what crw / the crw_search MCP tool consume.
+  formats:
+    - html
+    - json
+
+server:
+  bind_address: "127.0.0.1"
+  port: 8888
+  # Generate with:  .venv\Scripts\python.exe -c "import secrets;print(secrets.token_hex(32))"
+  secret_key: "CHANGE-ME"
+  # limiter/bot-detection needs a valkey server; disabled for the local single-user case.
+  limiter: false
+  image_proxy: false

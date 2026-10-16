@@ -27,3 +27,7 @@ searx/version_frozen.py
 .dir-locals.el
 
 .python-version
+
+# Windows-native local config (see WINDOWS.md)
+/.venv/
+/settings.yml
