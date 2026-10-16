@@ -21,7 +21,12 @@ run.cmd
 ```
 
 Serves on `http://127.0.0.1:8888`. On first launch `run.cmd` creates
-`settings.yml` from `settings.windows.yml` with a freshly generated secret key.
+`settings.yml` from `settings.windows.yml` with a freshly generated secret key
+(the same auto-generation the upstream install script and Docker entrypoint do).
+
+To supply your own key instead, copy `settings.windows.yml` to `settings.yml`
+and edit `server.secret_key` before the first run — `run.cmd` only generates one
+when `settings.yml` is absent.
 
 ## Using it from a client
 

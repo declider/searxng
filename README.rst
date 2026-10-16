@@ -25,7 +25,9 @@ Run
 
 Serves on http://127.0.0.1:8888 with JSON output enabled. On first launch
 ``run.cmd`` creates ``settings.yml`` from ``settings.windows.yml`` with a
-freshly generated secret key.
+freshly generated secret key (as upstream's install script and Docker
+entrypoint do). To use your own key, copy the template to ``settings.yml`` and
+edit ``server.secret_key`` before the first run.
 
 Compatibility
 -------------
