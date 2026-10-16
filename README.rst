@@ -13,14 +13,8 @@ Install
 
 .. code-block:: powershell
 
-   uv venv .venv --python 3.12
-   uv pip install --python .venv\Scripts\python.exe setuptools wheel pyyaml msgspec typing-extensions pybind11
-   uv pip install --python .venv\Scripts\python.exe --no-build-isolation -e .
-   uv pip install --python .venv\Scripts\python.exe tzdata
-
-   copy settings.windows.yml settings.yml
-   .venv\Scripts\python.exe -c "import secrets;print(secrets.token_hex(32))"
-   rem paste the output into server.secret_key in settings.yml
+   uv venv --python 3.12
+   uv pip install -r requirements.txt tzdata
 
 Run
 ---
@@ -29,10 +23,22 @@ Run
 
    run.cmd
 
-The instance serves on http://127.0.0.1:8888 with JSON search enabled, ready
-for local agents::
+Serves on http://127.0.0.1:8888 with JSON output enabled. On first launch
+``run.cmd`` creates ``settings.yml`` from ``settings.windows.yml`` with a
+freshly generated secret key.
 
-   crw search "your query" --search-backend-url http://127.0.0.1:8888
+Compatibility
+-------------
+
+It exposes the standard SearXNG JSON API, so any client that can talk to a
+SearXNG instance works — MCP SearXNG servers, LangChain/LlamaIndex, Open WebUI,
+browser extensions, or a plain request::
+
+   curl "http://127.0.0.1:8888/search?q=your+query&format=json"
+
+Tools that take a SearXNG backend URL point at it, for example::
+
+   your-tool --search-backend-url http://127.0.0.1:8888
 
 See ``WINDOWS.md`` for the complete list of changes against upstream.
 Everything below is the unmodified upstream README.

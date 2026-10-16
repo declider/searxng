@@ -6,18 +6,13 @@ branch makes SearXNG run **natively on Windows** with no Docker and no WSL.
 ## Setup (one time)
 
 ```powershell
-# uv provides the Python 3.12 toolchain (3.14 is not supported by SearXNG)
-uv venv .venv --python 3.12
-
-uv pip install --python .venv\Scripts\python.exe setuptools wheel pyyaml msgspec typing-extensions pybind11
-uv pip install --python .venv\Scripts\python.exe --no-build-isolation -e .
-uv pip install --python .venv\Scripts\python.exe tzdata
-
-# Config: copy the template and set a unique secret
-copy settings.windows.yml settings.yml
-.venv\Scripts\python.exe -c "import secrets;print(secrets.token_hex(32))"
-# paste the output into server.secret_key in settings.yml
+uv venv --python 3.12
+uv pip install -r requirements.txt tzdata
 ```
+
+`uv` fetches the Python 3.12 toolchain itself; SearXNG does not support 3.14.
+Installing the requirements (rather than the package) is enough — the webapp
+runs from the repository root, so no build step is needed.
 
 ## Run
 
@@ -25,19 +20,23 @@ copy settings.windows.yml settings.yml
 run.cmd
 ```
 
-Serves on `http://127.0.0.1:8888`. The JSON format is enabled for API clients.
+Serves on `http://127.0.0.1:8888`. On first launch `run.cmd` creates
+`settings.yml` from `settings.windows.yml` with a freshly generated secret key.
 
-## Point crw at it
+## Using it from a client
+
+It exposes the standard SearXNG JSON API, so any client that can talk to a
+SearXNG instance works — MCP SearXNG servers, LangChain/LlamaIndex, Open WebUI,
+browser extensions, or a plain request:
 
 ```powershell
-crw search "your query" --search-backend-url http://127.0.0.1:8888
+curl "http://127.0.0.1:8888/search?q=your+query&format=json"
 ```
 
-Or permanently, in `config.toml`:
+Tools that take a SearXNG backend URL just point at it, e.g.:
 
-```toml
-[search]
-search_backend_url = "http://127.0.0.1:8888"
+```powershell
+your-tool --search-backend-url http://127.0.0.1:8888
 ```
 
 ## What this branch changes vs upstream
